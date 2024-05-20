@@ -102,4 +102,39 @@ class NumberTile extends Tile {
     }
 }
 
-const grid = new Grid([10, 10], 'Hard');
+class GameSpinnerUpperer {
+    constructor(){
+        this.askGamer()
+        this.newGame = 0
+    }
+
+    askGamer(){
+        //ask gamer about what difficulty they want to play
+        //ask gamer about what grid size they want to play on
+        //this.newGame = new Grid(dimensions,difficulty)
+    }
+
+    gamerGames(){
+        //implement gamer gaming - enter coordinate to select, enter coord to flag etc etc
+        //input handling, how to ensure co-ords are correct, how to handle incorrect coords etc etc
+
+    }
+
+    gamerOver(){
+        //gamer dead, game over screen
+    }
+
+    gamerBigW(){
+        //gamer wins tell them they did good woooo
+    }
+
+    gamerReplay(){
+        //gamer wants more gaming? restart game screen
+    }
+
+    gamerQuit(){
+        //gamer done with gaming? quit game 
+    }
+
+
+}
