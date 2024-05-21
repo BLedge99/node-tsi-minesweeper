@@ -1,3 +1,5 @@
+const prompt = require('prompt-sync')();
+
 class Grid {
     constructor(dimensions, difficulty) {
         this.numTiles = dimensions[0] * dimensions[1];
@@ -7,7 +9,6 @@ class Grid {
         this.bombs = 0;
         this.setBombs(difficulty);
         this.createGrid(this.addBombs());
-        this.showGrid();
     }
 
     setBombs(difficulty) {
@@ -98,57 +99,69 @@ class NumberTile extends Tile {
     }
 }
 
+
 class GameSpinnerUpperer {
-    constructor(){
-        this.askGamer()
-        this.newGame = 0
-        const readline = require('node:readline');
-        const rl = readline.createInterface({
-            input: process.stdin,
-            output: process.stdout,
-        });    
+    constructor() {
+        this.askGamer();
+        const difficultyMap = {1 : "Easy", 2 : "Medium", 3 : "Hard"}; 
     }
 
-    promptUser(question) {
-        return new Promise((resolve) => {
-            rl.question(question, (answer) => {
-            resolve(answer);
-            });
-        });
-    }    
-
-    async askGamerDifficulty(){
-        console.log("EASY [1] \n MEDIUM [2] \n HARD [3] \n");
-        userDifficulty = await promptUser("Please select difficulty: (1,2,3) ");
-        //input handling
-        return userDifficulty
+    askGamerDifficulty() {
+        console.log("EASY [1] \nMEDIUM [2] \nHARD [3] \n");
+        let userDifficulty = prompt("Please select difficulty: (Enter 1, 2, or 3) ");
+        return parseInt(userDifficulty, 10);
     }
 
-    async askGamerGrid(){
-        userGrid = await promptUser("Please enter desired grid dimensions ie 4, 5");
-        //input handling
-        return userGrid
+    askGamerGrid() {
+        let userGridX = prompt("Please enter desired x dimension for your grid: ");
+        let userGridY = prompt("Please enter desired y dimension for your grid: ");
+        return [parseInt(userGridX, 10), parseInt(userGridY, 10)];
     }
 
-    async askGamerSelect(){
-        userSelect = await promptUser("Please enter desired co-ordinate");
-        //input handling
-        return userSelect
+    askGamerSelect() {
+        let userX = prompt("Please enter desired x coordinate for your selection: ");
+        let userY = prompt("Please enter desired y coordinate for your selection: ");
+        return [parseInt(userX, 10), parseInt(userY, 10)];
     }
 
-    async askGamerFlag(){
-        userFlag = await promptUser("SELECT COORDINATE [1] \n FLAG COORDINATE [2] \n Please choose wheter you would like to select or flag a coordinate (1,2): ");
-        //input handling
-        return userFlag
+    askGamerFlag() {
+        let userFlag = prompt("SELECT COORDINATE [1] \nFLAG COORDINATE [2] \nPlease choose whether you would like to select or flag a coordinate (Enter 1 or 2): ");
+        return parseInt(userFlag, 10);
     }
 
-    async gamerReplay(){
-        userReplay = await promptUser("NEW GAME WITH SAME SETTINGS [1] \n NEW GAME WITH NEW SETTINGS [2] \n QUIT GAME [3] \n Please choose wheter you would like to replay or quit (1,2,3): ");
-        //input handling
-        return userReplay
+    gamerReplay() {
+        let userReplay = prompt("NEW GAME WITH SAME SETTINGS [1] \nNEW GAME WITH NEW SETTINGS [2] \nQUIT GAME [3] \nPlease choose whether you would like to replay or quit (Enter 1, 2, or 3): ");
+        return parseInt(userReplay, 10);
     }
 
-
+    askGamer() {
+        let difficulty = this.askGamerDifficulty();
+        let gridSizes = this.askGamerGrid();
+        const grid = new Grid([gridSizes[0], gridSizes[1]], difficulty);
+        const renderer = new Renderer(grid);
+        let x = true;
+        renderer.showGrid();
+        while (x) { // find way of ending game 
+            if (this.askGamerFlag() === 1) {  // Ensure that you compare with a number
+                const [y, x] = this.askGamerSelect();
+                if (x >= 0 && x < grid.lenx && y >= 0 && y < grid.leny) {  // Check bounds
+                    renderer.reveal(x, y);
+                } else {
+                    console.log("Invalid coordinates, please try again.");
+                }
+                renderer.showGrid();
+            }
+            else {
+                const [y, x] = this.askGamerSelect();
+                if (x >= 0 && x < grid.lenx && y >= 0 && y < grid.leny) {  // Check bounds
+                    renderer.setFlagged(x, y);
+                } else {
+                    console.log("Invalid coordinates, please try again.");
+                }
+                renderer.showGrid();
+            }
+        }
+    }
 }
 
 class TileRender {
@@ -187,6 +200,7 @@ class TileRender {
 
     setBombRevealed(){
         this.value = ' 💣 ';
+        this.gamerOver();
     }
 
     getTileParts() {
@@ -200,6 +214,7 @@ class TileRender {
 
 class Renderer {
     constructor(grid){
+        this.grid = grid;
         this.gridRender = [];
         this.lenx = grid.lenx;
         this.leny = grid.leny;
@@ -247,24 +262,44 @@ class Renderer {
         }
     }
 
+    reveal(x,y){
+        let tileValue = this.grid.grid[x][y].type;   
+        if (tileValue === 'bomb'){
+            this.revealBomb(x,y);
+        }
+        if (tileValue === 'blankTile'){
+            this.revealEmpty(x,y);
+        }
+        if (tileValue === 'numberTile'){
+            this.revealNumber(x,y);
+        }
+    }
+
     revealEmpty(x,y){
         for (let x1 = Math.max(0, x - 1); x1 <= Math.min(x + 1, this.grid.length - 1); x1++) {
             for (let y1 = Math.max(0, y - 1); y1 <= Math.min(y + 1, this.grid[0].length - 1); y1++) {
                 if (this.grid[x1][y1] instanceof Tile && this.grid[x1][y1].type === 'blankTile') {
-                    this.grid[x1][y1].setEmptyRevealed();
+                    this.gridRender[x1][y1].setEmptyRevealed();
                     this.revealEmpty(x1,y1);
                 }
+                else if (this.grid[x1][y1] instanceof Tile && this.grid[x1][y1].type === 'numberTile') {
+                    this.gridRender[x1][y1].setNumberRevealed(); 
+                }   
             }
         }
     }
 
     revealNumber(x,y){
-        this.grid[x][y].revealNumber();
+        this.gridRender[x][y].revealNumber();
     }
 
     revealBomb(x,y){
-        this.grid[x][y].revealBomb();
+        this.gridRender[x][y].revealBomb();
         this.gamerOver();
+    }
+
+    setFlagged(x,y){
+        this.gridRender[x][y].setFlagged();
     }
 
     revealAll(){
@@ -306,7 +341,9 @@ class Renderer {
 }
 
 
+//grid = new Grid([7,10],'Easy');
+//render = new Renderer(grid);
+//render.showGrid();
 
-const grid = new Grid([12, 9], "Easy");
-const renderer = new Renderer(grid);
-renderer.showGrid();
+
+newgame = new GameSpinnerUpperer();
