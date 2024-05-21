@@ -85,7 +85,7 @@ class Grid {
     }
 
     showGrid() {
-        console.log(this.grid);
+        //
     }
 }
 
@@ -138,3 +138,57 @@ class GameSpinnerUpperer {
 
 
 }
+
+
+class TileRender {
+    constructor(Tile){
+        this.tile = Tile;
+        this.value = '-----\n|   |\n-----';
+    }
+
+    clickedValue(){
+        if (tile.value){
+            this.value = `-----\n| ${this.tile.value} |\n-----`;
+        }
+        else if (this.tile.type === 'bomb'){
+            this.value = `-----\n| 💣 |\n-----`;
+        }
+        else {
+            this.value = `-----\n|   |\n-----`;
+        }
+    }
+
+    setFlagged(){
+        this.value = '-----\n| 🚩 |\n-----';
+    }
+}
+
+class Renderer {
+    constructor(grid){
+        this.gridRender = []
+        this.makeGrid(grid);
+    }
+
+    makeGrid(grid){
+        for (let tileRow of grid.grid){
+            let newRow = [];
+            for (let tile of tileRow){
+                let tileRender = new TileRender(tile);
+                newRow.push(tileRender);
+            }
+            this.gridRender.push(newRow);
+        }
+    }
+
+    showGrid(){
+        for (let tileRow of this.gridRender){
+            for (let tile of tileRow){
+                console.log(tile.value);
+            }
+        }
+    }
+}
+
+grid = new Grid([10,10],"Easy");
+renderer = new Renderer(grid);
+renderer.showGrid();
