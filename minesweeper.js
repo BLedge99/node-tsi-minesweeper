@@ -83,10 +83,6 @@ class Grid {
         }
         return count;
     }
-
-    showGrid() {
-        //
-    }
 }
 
 class Tile {
@@ -106,89 +102,211 @@ class GameSpinnerUpperer {
     constructor(){
         this.askGamer()
         this.newGame = 0
+        const readline = require('node:readline');
+        const rl = readline.createInterface({
+            input: process.stdin,
+            output: process.stdout,
+        });    
     }
 
-    askGamer(){
-        //ask gamer about what difficulty they want to play
-        //ask gamer about what grid size they want to play on
-        //this.newGame = new Grid(dimensions,difficulty)
+    promptUser(question) {
+        return new Promise((resolve) => {
+            rl.question(question, (answer) => {
+            resolve(answer);
+            });
+        });
+    }    
+
+    async askGamerDifficulty(){
+        console.log("EASY [1] \n MEDIUM [2] \n HARD [3] \n");
+        userDifficulty = await promptUser("Please select difficulty: (1,2,3) ");
+        //input handling
+        return userDifficulty
     }
 
-    gamerGames(){
-        //implement gamer gaming - enter coordinate to select, enter coord to flag etc etc
-        //input handling, how to ensure co-ords are correct, how to handle incorrect coords etc etc
-
+    async askGamerGrid(){
+        userGrid = await promptUser("Please enter desired grid dimensions ie 4, 5");
+        //input handling
+        return userGrid
     }
 
-    gamerOver(){
-        //gamer dead, game over screen
+    async askGamerSelect(){
+        userSelect = await promptUser("Please enter desired co-ordinate");
+        //input handling
+        return userSelect
     }
 
-    gamerBigW(){
-        //gamer wins tell them they did good woooo
+    async askGamerFlag(){
+        userFlag = await promptUser("SELECT COORDINATE [1] \n FLAG COORDINATE [2] \n Please choose wheter you would like to select or flag a coordinate (1,2): ");
+        //input handling
+        return userFlag
     }
 
-    gamerReplay(){
-        //gamer wants more gaming? restart game screen
-    }
-
-    gamerQuit(){
-        //gamer done with gaming? quit game 
+    async gamerReplay(){
+        userReplay = await promptUser("NEW GAME WITH SAME SETTINGS [1] \n NEW GAME WITH NEW SETTINGS [2] \n QUIT GAME [3] \n Please choose wheter you would like to replay or quit (1,2,3): ");
+        //input handling
+        return userReplay
     }
 
 
 }
 
-
 class TileRender {
-    constructor(Tile){
-        this.tile = Tile;
-        this.value = '-----\n|   |\n-----';
+    constructor(tile){
+        this.tile = tile;
+        this.value = '   ';  
     }
 
     clickedValue(){
-        if (tile.value){
-            this.value = `-----\n| ${this.tile.value} |\n-----`;
+        if (this.tile.value){
+            this.value = ` ${this.tile.value} `;
         }
         else if (this.tile.type === 'bomb'){
-            this.value = `-----\n| 💣 |\n-----`;
-        }
-        else {
-            this.value = `-----\n|   |\n-----`;
+            this.value = ' 💣 ';
         }
     }
 
     setFlagged(){
-        this.value = '-----\n| 🚩 |\n-----';
+        if (this.value === '   '){
+            this.value = ' 🚩 ';
+        }
+        else{
+            console.log("Can't flag a revealed tile!");
+        }
+    }
+
+    setEmptyRevealed(){
+        if (this.value === '   '){
+            this.value = ' 😎 ';
+        }
+    }
+
+    setNumberRevealed(){
+        this.value = ` ${this.tile.value} `;
+    }
+
+    setBombRevealed(){
+        this.value = ' 💣 ';
+    }
+
+    getTileParts() {
+        return {
+            top: '-----',
+            middle: `|${this.value}|`,
+            bottom: '-----'
+        };
     }
 }
 
 class Renderer {
     constructor(grid){
-        this.gridRender = []
+        this.gridRender = [];
+        this.lenx = grid.lenx;
+        this.leny = grid.leny;
         this.makeGrid(grid);
     }
 
     makeGrid(grid){
-        for (let tileRow of grid.grid){
+        for (let y = 0; y < this.leny; y++){
             let newRow = [];
-            for (let tile of tileRow){
-                let tileRender = new TileRender(tile);
+            for (let x = 0; x < this.lenx; x++){
+                let tileRender = new TileRender(grid.grid[x][y]);
                 newRow.push(tileRender);
             }
             this.gridRender.push(newRow);
         }
     }
 
+    createXLegend() {
+        let legend = "    ";  
+        for (let i = 0; i < this.lenx; i++) {
+            legend += `  ${i}   `;
+        }
+        return legend;
+    }
+
     showGrid(){
-        for (let tileRow of this.gridRender){
-            for (let tile of tileRow){
-                console.log(tile.value);
+        const xLegend = this.createXLegend();
+        console.log(xLegend);  
+
+        for (let y = 0; y < this.leny; y++) {
+            let topRow = `${y} `;   
+            let middleRow = "  ";   
+            let bottomRow = "  ";   
+
+            for (let tile of this.gridRender[y]){
+                const parts = tile.getTileParts();
+                topRow += parts.top + " ";
+                middleRow += parts.middle + " ";
+                bottomRow += parts.bottom + " ";
+            }
+
+            console.log(topRow);
+            console.log(middleRow);
+            console.log(bottomRow);
+        }
+    }
+
+    revealEmpty(x,y){
+        for (let x1 = Math.max(0, x - 1); x1 <= Math.min(x + 1, this.grid.length - 1); x1++) {
+            for (let y1 = Math.max(0, y - 1); y1 <= Math.min(y + 1, this.grid[0].length - 1); y1++) {
+                if (this.grid[x1][y1] instanceof Tile && this.grid[x1][y1].type === 'blankTile') {
+                    this.grid[x1][y1].setEmptyRevealed();
+                    this.revealEmpty(x1,y1);
+                }
             }
         }
     }
+
+    revealNumber(x,y){
+        this.grid[x][y].revealNumber();
+    }
+
+    revealBomb(x,y){
+        this.grid[x][y].revealBomb();
+        this.gamerOver();
+    }
+
+    revealAll(){
+        //code to reveal entire grid
+    }
+
+    gamerOver(){
+        //gamer dead, game over screen
+        console.log('==============================');
+        console.log('==============================');
+        console.log('==============================');
+        console.log(`
+        ╔═╗╔═╗╔╦╗╔═╗  ╔═╗╦  ╦╔═╗╦═╗
+        ║ ╦╠═╣║║║║╣   ║ ║╚╗╔╝║╣ ╠╦╝
+        ╚═╝╩ ╩╩ ╩╚═╝  ╚═╝ ╚╝ ╚═╝╩╚═
+        `);
+        console.log('==============================');
+        console.log('==============================');
+        console.log('==============================');
+        console.log(` 
+        ________  ___       ________      ___    ___      ________  ________  ________  ___  ________   ________      
+        |\   __  \|\  \     |\   __  \    |\  \  /  /|    |\   __  \|\   ____\|\   __  \|\  \|\   ___  \|\_____  \     
+        \ \  \|\  \ \  \    \ \  \|\  \   \ \  \/  / /    \ \  \|\  \ \  \___|\ \  \|\  \ \  \ \  \\ \  \|____|\  \    
+         \ \   ____\ \  \    \ \   __  \   \ \    / /      \ \   __  \ \  \  __\ \   __  \ \  \ \  \\ \  \    \ \__\   
+          \ \  \___|\ \  \____\ \  \ \  \   \/  /  /        \ \  \ \  \ \  \|\  \ \  \ \  \ \  \ \  \\ \  \    \|__|   
+           \ \__\    \ \_______\ \__\ \__\__/  / /           \ \__\ \__\ \_______\ \__\ \__\ \__\ \__\\ \__\       ___ 
+            \|__|     \|_______|\|__|\|__|\___/ /             \|__|\|__|\|_______|\|__|\|__|\|__|\|__| \|__|      |\__\
+                                         \|___|/                                                                  \|__|
+                                                                                                                       
+                                                                                                       `);
+        console.log('==============================');
+        console.log('==============================');
+        console.log('==============================');
+    }
+
+    gamerBigW(){
+        //gamer wins tell them they did good woooo
+    }
 }
 
-grid = new Grid([10,10],"Easy");
-renderer = new Renderer(grid);
+
+
+const grid = new Grid([12, 9], "Easy");
+const renderer = new Renderer(grid);
 renderer.showGrid();
