@@ -11,7 +11,8 @@ class GridRender {
         this.leny = dimensions[1];
         this.setBombCount(this.difficulty);
         this.createGrid(this.setBombLocations());
-        console.log(this.bombs)
+        //this.revealAll();
+        console.log(`--------------------------\nBe cautious!!!\n-------------------------\nThis grid contains ${this.bombs} bombs!!!!!!!!!!\n---------------------------------\nYou will lose if you reveal any of them!!!!!!!!!!!!!!!!!!!!!!!!!!!\n------------------------------`)
     }
 
     setBombCount(difficulty) {
@@ -121,7 +122,7 @@ class GridRender {
 
     reveal(x, y) {
         if (!this.grid[x][y].isRevealed) {
-            console.log(`Revealing tile at (${y}, ${x}) with type ${this.grid[y][x].type}`);
+            console.log(`Revealing tile at (${x}, ${y}) with type ${this.grid[x][y].type}`);
             this.grid[x][y].revealValue();
             if (this.grid[x][y].type == 'blankTile'){
                 this.revealEmpty(x, y); 
@@ -130,11 +131,9 @@ class GridRender {
     }
 
     revealEmpty(x, y) {
-        console.log("Hello")
         for (let x1 = Math.max(0, x - 1); x1 <= Math.min(x + 1, this.lenx - 1); x1++) {
             for (let y1 = Math.max(0, y - 1); y1 <= Math.min(y + 1, this.leny - 1); y1++) {
                 if (!this.grid[x1][y1].isRevealed && this.grid[x1][y1].type != 'bomb') {
-                    console.log("Hello again")
                     this.reveal(x1, y1);
                 }
             }
@@ -213,7 +212,6 @@ class Tile {
     }
 
     revealValue() {
-        console.log(`Revleaing tile with type ${this.type}`);
         if (this.type === 'numberTile'){
             this.displayValue = ` ${this.value} `;
         }
@@ -339,7 +337,7 @@ class GameSpinnerUpperer {
                 gameGrid.showGrid();
             }
             else {
-                let [x, ] = this.askGamerSelect();
+                let [x, y] = this.askGamerSelect();
                 if (x >= 0 && x < gameGrid.lenx && y >= 0 && y < gameGrid.leny) {  // Check bounds
                     gameGrid.setFlagged(x, y);
                 } else {
