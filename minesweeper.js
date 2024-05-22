@@ -290,7 +290,8 @@ class GameSpinnerUpperer {
     }
 
     askGamerFlag() {
-        let userFlag = prompt("SELECT COORDINATE [1] \nFLAG COORDINATE [2] \nPlease choose whether you would like to select or flag a coordinate (Enter 1 or 2): ");
+        console.log("\nSELECT COORDINATE [1] \nFLAG COORDINATE [2] \n");
+        let userFlag = prompt("Please choose whether you would like to select or flag a coordinate (Enter 1 or 2): ");
         let answer = parseInt(userFlag, 10);
         if (answer === 1 || answer === 2){
             return answer
@@ -302,7 +303,8 @@ class GameSpinnerUpperer {
     }
 
     gamerReplay() {
-        let userReplay = prompt("NEW GAME WITH SAME SETTINGS [1] \nNEW GAME WITH NEW SETTINGS [2] \nQUIT GAME [3] \nPlease choose whether you would like to replay or quit (Enter 1, 2, or 3): ");
+        console.log("NEW GAME WITH SAME SETTINGS [1] \nNEW GAME WITH NEW SETTINGS [2] \nQUIT GAME [3] \n")
+        let userReplay = prompt("Please choose whether you would like to replay or quit (Enter 1, 2, or 3): ");
         let answer = parseInt(userReplay, 10);
         if (answer === 1 || answer === 2 || answer === 3){
             return answer
