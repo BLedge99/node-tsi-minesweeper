@@ -267,6 +267,10 @@ class GameSpinnerUpperer {
         let userGridY = prompt("Please enter desired y dimension for your grid: "); 
         //let answer = [userGridX,userGridY];
         let answer = [parseInt(userGridX, 10), parseInt(userGridY, 10)];
+        if (!isNaN(answer[0]) && !isNaN(answer[1]) && (answer[0] > 100 || answer[1] > 100)){
+            console.log("We could do that but you nor me want to be sitting around for that long...");
+            this.askGamerGrid();
+        }
         if (!isNaN(answer[0]) && !isNaN(answer[1])){
             return answer
         }
